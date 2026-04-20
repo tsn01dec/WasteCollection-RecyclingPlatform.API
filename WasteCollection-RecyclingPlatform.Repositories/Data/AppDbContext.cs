@@ -14,7 +14,6 @@ public class AppDbContext : DbContext
     public DbSet<VoucherCategory> VoucherCategories => Set<VoucherCategory>();
     public DbSet<Voucher> Vouchers => Set<Voucher>();
     public DbSet<VoucherCode> VoucherCodes => Set<VoucherCode>();
-    public DbSet<CollectionRequest> CollectionRequests => Set<CollectionRequest>();
     public DbSet<WasteCategory> WasteCategories => Set<WasteCategory>();
     public DbSet<WasteReport> WasteReports => Set<WasteReport>();
     public DbSet<WasteReportItem> WasteReportItems => Set<WasteReportItem>();
@@ -121,27 +120,6 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
-        modelBuilder.Entity<CollectionRequest>(entity =>
-        {
-            entity.ToTable("collection_requests");
-            entity.HasKey(x => x.Id);
-            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32).IsRequired();
-            entity.Property(x => x.WeightKg).HasPrecision(18, 2);
-
-            entity.HasOne(x => x.Citizen)
-                .WithMany()
-                .HasForeignKey(x => x.CitizenId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(x => x.Collector)
-                .WithMany()
-                .HasForeignKey(x => x.CollectorId)
-                .OnDelete(DeleteBehavior.SetNull);
- 
-            entity.HasOne(x => x.Ward)
-                .WithMany()
-                .HasForeignKey(x => x.WardId)
-                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<WasteCategory>(entity =>
@@ -179,6 +157,11 @@ public class AppDbContext : DbContext
             entity.HasOne(x => x.AssignedCollector)
                 .WithMany()
                 .HasForeignKey(x => x.AssignedCollectorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(x => x.Ward)
+                .WithMany()
+                .HasForeignKey(x => x.WardId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 

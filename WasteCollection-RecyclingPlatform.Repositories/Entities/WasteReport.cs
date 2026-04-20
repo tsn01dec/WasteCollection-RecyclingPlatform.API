@@ -24,6 +24,9 @@ public class WasteReport
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAtUtc { get; set; }
 
+    public long? WardId { get; set; }
+    public Ward? Ward { get; set; }
+
     public ICollection<WasteReportItem> Items { get; set; } = new List<WasteReportItem>();
     public ICollection<WasteReportImage> Images { get; set; } = new List<WasteReportImage>();
     public ICollection<WasteReportStatusHistory> StatusHistories { get; set; } = new List<WasteReportStatusHistory>();

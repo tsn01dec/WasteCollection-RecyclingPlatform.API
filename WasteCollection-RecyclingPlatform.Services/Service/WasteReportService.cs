@@ -180,6 +180,7 @@ public class WasteReportService : IWasteReportService
         var report = new WasteReport
         {
             CitizenId = citizenId,
+            WardId = request.WardId ?? citizen.Wards?.FirstOrDefault()?.Id,
             Title = string.IsNullOrWhiteSpace(request.Title) ? null : request.Title.Trim(),
             Description = description,
             LocationText = string.IsNullOrWhiteSpace(request.LocationText) ? null : request.LocationText.Trim(),
@@ -486,8 +487,8 @@ public class WasteReportService : IWasteReportService
             CancellationReason = report.Status == WasteReportStatus.Cancelled
                 ? cancellationReason ?? report.CompletionNote
                 : null,
-            WardId = null,
-            WardName = null,
+            WardId = report.WardId ?? report.Citizen?.Wards?.FirstOrDefault()?.Id,
+            WardName = report.Ward?.Name ?? report.Citizen?.Wards?.FirstOrDefault()?.Name,
             Materials = materials,
             Images = images,
         };

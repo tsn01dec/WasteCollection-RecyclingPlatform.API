@@ -41,12 +41,14 @@ public class WasteReportRepository : IWasteReportRepository
     {
         return await _db.WasteReports
             .Include(x => x.Citizen)
+                .ThenInclude(x => x.Wards)
             .Include(x => x.AssignedCollector)
             .Include(x => x.Items)
                 .ThenInclude(x => x.WasteCategory)
             .Include(x => x.Items)
                 .ThenInclude(x => x.Images)
             .Include(x => x.Images)
+            .Include(x => x.Ward)
             .Include(x => x.StatusHistories)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id, ct);
@@ -56,12 +58,14 @@ public class WasteReportRepository : IWasteReportRepository
     {
         return await _db.WasteReports
             .Include(x => x.Citizen)
+                .ThenInclude(x => x.Wards)
             .Include(x => x.AssignedCollector)
             .Include(x => x.Items)
                 .ThenInclude(x => x.WasteCategory)
             .Include(x => x.Items)
                 .ThenInclude(x => x.Images)
             .Include(x => x.Images)
+            .Include(x => x.Ward)
             .Include(x => x.StatusHistories)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
     }
@@ -74,6 +78,7 @@ public class WasteReportRepository : IWasteReportRepository
             .Include(x => x.Items)
                 .ThenInclude(x => x.Images)
             .Include(x => x.Images)
+            .Include(x => x.Ward)
             .Include(x => x.StatusHistories)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
     }
@@ -87,6 +92,7 @@ public class WasteReportRepository : IWasteReportRepository
             .Include(x => x.Items)
                 .ThenInclude(x => x.Images)
             .Include(x => x.Images)
+            .Include(x => x.Ward)
             .Include(x => x.StatusHistories)
                 .ThenInclude(x => x.ChangedByUser)
             .AsNoTracking()
@@ -97,12 +103,14 @@ public class WasteReportRepository : IWasteReportRepository
     {
         return await _db.WasteReports
             .Include(x => x.Citizen)
+                .ThenInclude(x => x.Wards)
             .Include(x => x.AssignedCollector)
             .Include(x => x.Items)
                 .ThenInclude(x => x.WasteCategory)
             .Include(x => x.Items)
                 .ThenInclude(x => x.Images)
             .Include(x => x.Images)
+            .Include(x => x.Ward)
             .Include(x => x.StatusHistories)
             .OrderByDescending(x => x.CreatedAtUtc)
             .AsNoTracking()
@@ -117,6 +125,7 @@ public class WasteReportRepository : IWasteReportRepository
             .Include(x => x.Items)
                 .ThenInclude(x => x.Images)
             .Include(x => x.Images)
+            .Include(x => x.Ward)
             .Include(x => x.StatusHistories)
             .Where(x => x.CitizenId == citizenId)
             .OrderByDescending(x => x.CreatedAtUtc)
@@ -132,6 +141,7 @@ public class WasteReportRepository : IWasteReportRepository
             .Include(x => x.Items)
                 .ThenInclude(x => x.Images)
             .Include(x => x.Images)
+            .Include(x => x.Ward)
             .Include(x => x.StatusHistories)
             .Where(x => x.CitizenId == citizenId && x.Status == status)
             .OrderByDescending(x => x.CreatedAtUtc)
@@ -147,6 +157,7 @@ public class WasteReportRepository : IWasteReportRepository
             .Include(x => x.Items)
                 .ThenInclude(x => x.Images)
             .Include(x => x.Images)
+            .Include(x => x.Ward)
             .Include(x => x.StatusHistories)
             .Where(x => x.Status == status)
             .OrderByDescending(x => x.CreatedAtUtc)
@@ -178,6 +189,7 @@ public class WasteReportRepository : IWasteReportRepository
     public async Task<WasteReport?> GetAssignedForCollectorUpdateAsync(long collectorId, long reportId, CancellationToken ct = default)
     {
         return await BuildAssignedCollectorQuery(collectorId)
+            .Include(x => x.Ward)
             .Include(x => x.StatusHistories)
             .FirstOrDefaultAsync(x => x.Id == reportId, ct);
     }

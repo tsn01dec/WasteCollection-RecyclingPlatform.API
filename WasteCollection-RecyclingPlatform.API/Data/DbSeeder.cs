@@ -43,7 +43,6 @@ public static class DbSeeder
         await SeedAreasAsync(db);
         await SeedVouchersAsync(db);
         await SeedWasteCategoriesAsync(db);
-        await SeedCollectionRequestsAsync(db);
         await SeedRewardSamplesAsync(db);
         await SeedComplaintSamplesAsync(db);
 
@@ -306,87 +305,6 @@ public static class DbSeeder
         Console.WriteLine("[Seeder] Successfully seeded waste categories.");
     }
 
-    private static async Task SeedCollectionRequestsAsync(AppDbContext db)
-    {
-        // If we have enough requests and they already have the new CitizenName populated, skip seeding
-        if (await db.CollectionRequests.CountAsync() > 10 && await db.CollectionRequests.AnyAsync(r => r.CitizenName != null)) return;
-        
-        if (await db.CollectionRequests.AnyAsync())
-        {
-            db.CollectionRequests.RemoveRange(db.CollectionRequests);
-            await db.SaveChangesAsync();
-        }
-
-        // Ensure multiple citizens
-        var citizensData = new[]
-        {
-            ("citizen@gmail.com", "Nguyễn Văn Dân", "0988776655"),
-            ("tran.anh@gmail.com", "Trần Thị Ánh", "0912345678"),
-            ("le.hoang@gmail.com", "Lê Minh Hoàng", "0933445566"),
-            ("pham.lan@gmail.com", "Phạm Hương Lân", "0944556677"),
-            ("vo.thanh@gmail.com", "Võ Thành Trung", "0955667788")
-        };
-
-        foreach (var (email, name, phone) in citizensData)
-        {
-            await EnsureUserAsync(db, email, name, "123456", UserRole.Citizen, phone);
-        }
-
-        var citizens = await db.Users.Where(u => u.Role == UserRole.Citizen).ToListAsync();
-        var collectors = await db.Users.Where(u => u.Role == UserRole.Collector).Take(10).ToListAsync();
-        var wards = await db.Wards.Include(w => w.Area).ToListAsync();
-        var rnd = new Random();
- 
-        var wasteCategories = new[] { "Nhựa", "Kim loại", "Rác chung" };
-
-        var requests = new List<CollectionRequest>();
- 
-        for (int i = 0; i < 25; i++)
-        {
-            var citizen = citizens[rnd.Next(citizens.Count)];
-            var status = (CollectionRequestStatus)rnd.Next(5);
-            var createdAt = DateTime.UtcNow.AddDays(-rnd.Next(1, 15)).AddHours(-rnd.Next(1, 24));
-            var ward = wards[rnd.Next(wards.Count)];
-            
-            var req = new CollectionRequest
-            {
-                CitizenId = citizen.Id,
-                CitizenName = citizen.DisplayName ?? citizen.FullName,
-                WardId = ward.Id,
-                Address = $"{rnd.Next(1, 999)} {ward.Name}, {ward.Area.DistrictName}, TP.HCM",
-                WasteType = wasteCategories[rnd.Next(wasteCategories.Length)],
-                WeightKg = (decimal)(rnd.NextDouble() * 20 + 1),
-                Note = "Ghi chú mẫu cho đơn hàng số " + (i + 1),
-                Priority = i % 3 == 0 ? "High" : (i % 3 == 1 ? "Medium" : "Standard"),
-                Status = status,
-                CreatedAtUtc = createdAt,
-                MaterialsJson = "[{\"Type\":\"Loại rác A\",\"Amount\":2.0, \"Unit\":\"kg\"}]"
-            };
-
-            if (status == CollectionRequestStatus.Assigned || status == CollectionRequestStatus.Collected)
-            {
-                var col = collectors[rnd.Next(collectors.Count)];
-                req.CollectorId = col.Id;
-                req.CollectorName = col.DisplayName ?? col.FullName;
-            }
-
-            if (status == CollectionRequestStatus.Collected)
-            {
-                req.CompletedAtUtc = createdAt.AddHours(rnd.Next(2, 48));
-            }
-
-            if (status == CollectionRequestStatus.Cancelled)
-            {
-                req.CancellationReason = "Khách hàng thay đổi ý định hoặc không có mặt tại địa chỉ.";
-            }
-
-            requests.Add(req);
-        }
-
-        db.CollectionRequests.AddRange(requests);
-        await db.SaveChangesAsync();
-        Console.WriteLine($"[Seeder] Successfully seeded {requests.Count} collection requests for {citizens.Count} citizens.");
-    }
 
     private static async Task SeedRewardSamplesAsync(AppDbContext db)
     {
@@ -694,33 +612,7 @@ public static class DbSeeder
             }
         }
 
-        // B. Ensure all collection requests have a WardId by inferring from Address
-        var requests = await db.CollectionRequests
-            .Where(r => r.WardId == null)
-            .ToListAsync();
-
-        if (requests.Any())
-        {
-            foreach (var req in requests)
-            {
-                // Try to find a ward name in the address string
-                var matchingWard = allWards.FirstOrDefault(w => 
-                    !string.IsNullOrEmpty(req.Address) && 
-                    req.Address.Contains(w.Name, StringComparison.OrdinalIgnoreCase));
-
-                if (matchingWard != null)
-                {
-                    req.WardId = matchingWard.Id;
-                    Console.WriteLine($"[Seeder] Inferred Ward '{matchingWard.Name}' for Request #{req.Id} from address.");
-                }
-                else if (allWards.Any())
-                {
-                    // Fallback to a random ward if completely lost
-                    var fallback = allWards[rnd.Next(allWards.Count)];
-                    req.WardId = fallback.Id;
-                }
-            }
-        }
+        // B. (Legacy request repair removed)
 
         // C. Backfill legacy collected waste reports after UC-COL-02 completion fields were added.
         var collectedReports = await db.WasteReports

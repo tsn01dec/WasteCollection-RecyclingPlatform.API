@@ -11,6 +11,7 @@ public class WasteReportCreateRequest
     public string Description { get; set; } = string.Empty;
 
     public string? LocationText { get; set; }
+    public long? WardId { get; set; }
 
     public List<long> WasteCategoryIds { get; set; } = new();
     public List<decimal?> EstimatedWeightKgs { get; set; } = new();
