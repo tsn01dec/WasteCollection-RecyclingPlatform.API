@@ -269,7 +269,7 @@ public class CollectorJobService : ICollectorJobService
 
         var enterprises = await _userRepository.GetByRoleAsync(UserRole.RecyclingEnterprise, null, ct);
         var enterpriseIds = enterprises.Select(x => x.Id).ToList();
-        await _notificationService.NotifyReportCollectedAsync(report.Id, enterpriseIds, report.CitizenId, report.FinalRewardPoints, ct);
+        await _notificationService.NotifyReportCollectedAsync(report.Id, enterpriseIds, report.CitizenId, (decimal)(report.FinalRewardPoints ?? 0), ct);
 
         var saved = await _wasteReportRepository.GetByIdAsync(reportId, ct);
         return saved is null
