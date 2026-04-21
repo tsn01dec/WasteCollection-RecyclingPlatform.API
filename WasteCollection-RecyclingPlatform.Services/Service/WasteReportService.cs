@@ -23,17 +23,20 @@ public class WasteReportService : IWasteReportService
     private readonly IUserRepository _userRepository;
     private readonly IRewardService _rewardService;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly INotificationService _notificationService;
 
     public WasteReportService(
         IWasteReportRepository wasteReportRepository,
         IUserRepository userRepository,
         IRewardService rewardService,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        INotificationService notificationService)
     {
         _wasteReportRepository = wasteReportRepository;
         _userRepository = userRepository;
         _rewardService = rewardService;
         _httpContextAccessor = httpContextAccessor;
+        _notificationService = notificationService;
     }
 
     public async Task<List<WasteCategoryResponse>> GetCategoriesAsync(CancellationToken ct = default)
@@ -248,6 +251,10 @@ public class WasteReportService : IWasteReportService
             }
         }
 
+        var enterprises = await _userRepository.GetByRoleAsync(UserRole.RecyclingEnterprise, null, ct);
+        var enterpriseIds = enterprises.Select(x => x.Id).ToList();
+        await _notificationService.NotifyReportCreatedAsync(report.Id, citizen.DisplayName ?? citizen.Email, enterpriseIds, ct);
+
         var saved = await _wasteReportRepository.GetByIdAsync(report.Id, ct);
         return WasteReportCreateResult.Ok(MapReport(saved ?? report));
     }
@@ -372,6 +379,11 @@ public class WasteReportService : IWasteReportService
         var trackedReport = await _wasteReportRepository.GetStatusTrackingByIdAsync(report.Id, ct);
         if (trackedReport is null)
             return WasteReportStatusChangeResult.Fail("Không thể đọc lại trạng thái sau khi cập nhật.");
+
+        if (actorUserId != report.CitizenId)
+        {
+            await _notificationService.NotifyReportCancelledAsync(report.Id, report.CitizenId, note ?? "Báo cáo đã bị hủy.", ct);
+        }
 
         return WasteReportStatusChangeResult.Ok(MapStatusTracking(trackedReport));
     }
