@@ -16,7 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<VoucherCode> VoucherCodes => Set<VoucherCode>();
     public DbSet<WasteCategory> WasteCategories => Set<WasteCategory>();
     public DbSet<WasteReport> WasteReports => Set<WasteReport>();
-    public DbSet<CollectionRequest> CollectionRequests => Set<CollectionRequest>();
+
     public DbSet<WasteReportItem> WasteReportItems => Set<WasteReportItem>();
     public DbSet<WasteReportImage> WasteReportImages => Set<WasteReportImage>();
     public DbSet<WasteReportStatusHistory> WasteReportStatusHistories => Set<WasteReportStatusHistory>();

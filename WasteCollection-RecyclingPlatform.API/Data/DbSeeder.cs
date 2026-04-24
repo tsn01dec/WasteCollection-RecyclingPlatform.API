@@ -52,12 +52,10 @@ public static class DbSeeder
 
     private static async Task SeedAreasAsync(AppDbContext db)
     {
-        // Clear all existing data to ensure a fresh HCMC dataset
+        // Only seed if there is no existing data
         if (await db.Areas.AnyAsync())
         {
-            db.Areas.RemoveRange(db.Areas);
-            await db.SaveChangesAsync();
-            Console.WriteLine("[Seeder] Cleared existing Area/Ward data.");
+            return;
         }
 
         var jsonPath = Path.Combine(AppContext.BaseDirectory, "Data", "hcmc_admin_units.json");
